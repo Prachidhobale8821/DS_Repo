@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;
+
+Node* top = NULL;
+
+void push(int x) {
+    Node *p = (Node*)malloc(sizeof(Node));
+    if (!p) {
+        printf("Memory error\n");
+        return;
+    }
+    p->data = x;
+    p->next = top;
+    top = p;
+}
+
+int pop() {
+    if (!top) {
+        printf("Stack Underflow\n");
+        return -1;
+    }
+    Node *t = top;
+    int val = t->data;
+    top = top->next;
+    free(t);
+    return val;
+}
+
+void display() {
+    Node *p = top;
+    if (!p) { printf("Stack Empty\n"); return; }
+    while (p) {
+        printf("%d ", p->data);
+        p = p->next;
+    }
+    printf("\n");
+}
+
+int main() {
+    push(10);
+    push(20);
+    push(30);
+    display();
+    printf("Popped: %d\n", pop());
+    display();
+    return 0;
+}
