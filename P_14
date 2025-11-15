@@ -1,0 +1,126 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node *left, *right;
+} Node;
+
+Node* newNode(int x) {
+    Node* p = (Node*)malloc(sizeof(Node));
+    p->data = x; p->left = p->right = NULL; return p;
+}
+
+Node* insertBST(Node* root, int x) {
+    if (!root) return newNode(x);
+    if (x < root->data) root->left = insertBST(root->left, x);
+    else root->right = insertBST(root->right, x);
+    return root;
+}
+
+void inorder(Node* r) { if(!r) return; inorder(r->left); printf("%d ", r->data); inorder(r->right); }
+void preorder(Node* r) { if(!r) return; printf("%d ", r->data); preorder(r->left); preorder(r->right); }
+void postorder(Node* r) { if(!r) return; postorder(r->left); postorder(r->right); printf("%d ", r->data); }
+
+// Simple queue for BFS
+typedef struct Q {
+    Node* arr[1000]; int head, tail;
+} Q;
+void qInit(Q *q){ q->head=q->tail=0; }
+void qPush(Q *q, Node* n){ q->arr[q->tail++] = n; }
+Node* qPop(Q *q){ return q->arr[q->head++]; }
+int qEmpty(Q *q){ return q->head==q->tail; }
+
+void levelOrder(Node* root) {
+    if (!root) return;
+    Q q; qInit(&q); qPush(&q, root);
+    while(!qEmpty(&q)) {
+        Node* cur = qPop(&q);
+        printf("%d ", cur->data);
+        if (cur->left) qPush(&q, cur->left);
+        if (cur->right) qPush(&q, cur->right);
+    }
+}
+
+void mirror(Node* root) {
+    if (!root) return;
+    Node* tmp = root->left;
+    root->left = root->right;
+    root->right = tmp;
+    mirror(root->left); mirror(root->right);
+}
+
+// Find parent of node with value x (returns NULL if none)
+Node* findParent(Node* root, int x) {
+    if (!root) return NULL;
+    if ((root->left && root->left->data==x) || (root->right && root->right->data==x)) return root;
+    if (x < root->data) return findParent(root->left, x);
+    else return findParent(root->right, x);
+}
+
+// Find node pointer by value
+Node* findNode(Node* root, int x) {
+    if (!root) return NULL;
+    if (root->data == x) return root;
+    if (x < root->data) return findNode(root->left, x);
+    return findNode(root->right, x);
+}
+
+// Print children of x
+void printChildren(Node* root, int x) {
+    Node* n = findNode(root, x);
+    if (!n) { printf("No such node\n"); return; }
+    printf("Children of %d: ", x);
+    if (n->left) printf("%d ", n->left->data);
+    if (n->right) printf("%d ", n->right->data);
+    printf("\n");
+}
+
+// Print sibling of x
+void printSibling(Node* root, int x) {
+    Node* p = findParent(root, x);
+    if (!p) { printf("%d has no parent => no sibling\n", x); return; }
+    if (p->left && p->left->data == x && p->right) printf("Sibling: %d\n", p->right->data);
+    else if (p->right && p->right->data == x && p->left) printf("Sibling: %d\n", p->left->data);
+    else printf("No sibling\n");
+}
+
+// Grandparent (GP) of x
+void printGrandParent(Node* root, int x) {
+    Node* p = findParent(root, x);
+    if (!p) { printf("No grandparent\n"); return; }
+    Node* gp = findParent(root, p->data);
+    if (!gp) printf("No grandparent\n"); else printf("Grandparent: %d\n", gp->data);
+}
+
+// Uncle of x (sibling of parent)
+void printUncle(Node* root, int x) {
+    Node* p = findParent(root, x);
+    if (!p) { printf("No uncle\n"); return; }
+    Node* gp = findParent(root, p->data);
+    if (!gp) { printf("No uncle\n"); return; }
+    if (gp->left && gp->left->data == p->data && gp->right) printf("Uncle: %d\n", gp->right->data);
+    else if (gp->right && gp->right->data == p->data && gp->left) printf("Uncle: %d\n", gp->left->data);
+    else printf("No uncle\n");
+}
+
+int main() {
+    Node* root = NULL;
+    int vals[] = {50,30,70,20,40,60,80};
+    for (int i=0;i<7;i++) root = insertBST(root, vals[i]);
+    printf("Inorder: "); inorder(root); printf("\n");
+    printf("Preorder: "); preorder(root); printf("\n");
+    printf("Postorder: "); postorder(root); printf("\n");
+    printf("Level order (BFS): "); levelOrder(root); printf("\n");
+
+    printf("Children of 30: "); printChildren(root, 30);
+    printSibling(root, 20);
+    printGrandParent(root, 20);
+    printUncle(root, 20);
+
+    printf("Mirroring tree...\n");
+    mirror(root);
+    printf("Inorder of mirrored: "); inorder(root); printf("\n");
+
+    return 0;
+}
