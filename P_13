@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct DNode {
+    int data;
+    struct DNode *prev, *next;
+} DNode;
+
+DNode* newDNode(int x) {
+    DNode* p = (DNode*)malloc(sizeof(DNode));
+    p->data = x; p->prev = p->next = NULL;
+    return p;
+}
+
+// Insert at beginning
+DNode* insertFront(DNode* head, int x) {
+    DNode* p = newDNode(x);
+    p->next = head;
+    if (head) head->prev = p;
+    return p;
+}
+
+// Insert at end
+DNode* insertEnd(DNode* head, int x) {
+    DNode* p = newDNode(x);
+    if (!head) return p;
+    DNode* cur = head;
+    while(cur->next) cur = cur->next;
+    cur->next = p; p->prev = cur;
+    return head;
+}
+
+// Delete first node with value x
+DNode* deleteValue(DNode* head, int x) {
+    DNode* cur = head;
+    while(cur && cur->data != x) cur = cur->next;
+    if (!cur) return head;
+    if (cur->prev) cur->prev->next = cur->next;
+    else head = cur->next;
+    if (cur->next) cur->next->prev = cur->prev;
+    free(cur);
+    return head;
+}
+
+// Reverse list
+DNode* reverseDList(DNode* head) {
+    DNode *cur = head, *temp = NULL;
+    while(cur) {
+        temp = cur->prev;
+        cur->prev = cur->next;
+        cur->next = temp;
+        cur = cur->prev;
+    }
+    if (temp) head = temp->prev;
+    return head;
+}
+
+void printForward(DNode* head) {
+    printf("Forward: ");
+    while(head) { printf("%d ", head->data); head = head->next; }
+    printf("\n");
+}
+void printBackward(DNode* head) {
+    if (!head) { printf("Backward: \n"); return; }
+    while(head->next) head = head->next;
+    printf("Backward: ");
+    while(head) { printf("%d ", head->data); head = head->prev; }
+    printf("\n");
+}
+
+int main() {
+    DNode* head = NULL;
+    head = insertEnd(head, 10);
+    head = insertEnd(head, 20);
+    head = insertFront(head, 5);
+    printForward(head);
+    printBackward(head);
+
+    head = deleteValue(head, 20);
+    printf("After deleting 20:\n");
+    printForward(head);
+
+    head = reverseDList(head);
+    printf("After reversing:\n");
+    printForward(head);
+    printBackward(head);
+
+    return 0;
+}
