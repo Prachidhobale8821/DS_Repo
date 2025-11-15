@@ -1,0 +1,179 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Node
+typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;
+
+// Utility: create node
+Node* newNode(int x) {
+    Node *p = (Node*)malloc(sizeof(Node));
+    p->data = x; p->next = NULL;
+    return p;
+}
+
+// Create list from array
+Node* createFromArray(int arr[], int n) {
+    Node *head = NULL, *tail = NULL;
+    for (int i=0;i<n;i++){
+        Node *p = newNode(arr[i]);
+        if (!head) head = tail = p;
+        else { tail->next = p; tail = p;}
+    }
+    return head;
+}
+
+// Insert at position (0-index). pos==0 => new head
+Node* insertAtPos(Node* head, int pos, int val) {
+    Node *p = newNode(val);
+    if (pos == 0) { p->next = head; return p; }
+    Node *cur = head;
+    for (int i=0; cur && i < pos-1; i++) cur = cur->next;
+    if (!cur) { free(p); return head; } // invalid pos
+    p->next = cur->next; cur->next = p;
+    return head;
+}
+
+// Delete first occurrence of value
+Node* deleteByValue(Node* head, int val) {
+    Node *cur = head, *prev = NULL;
+    while(cur && cur->data != val) { prev = cur; cur = cur->next; }
+    if (!cur) return head;
+    if (!prev) { head = cur->next; free(cur); return head;}
+    prev->next = cur->next; free(cur);
+    return head;
+}
+
+// Reverse list
+Node* reverseList(Node* head) {
+    Node *prev = NULL, *cur = head, *next;
+    while(cur) { next = cur->next; cur->next = prev; prev = cur; cur = next; }
+    return prev;
+}
+
+// Merge two sorted lists
+Node* mergeSortedLists(Node* a, Node* b) {
+    if (!a) return b;
+    if (!b) return a;
+    if (a->data <= b->data) { a->next = mergeSortedLists(a->next, b); return a; }
+    else { b->next = mergeSortedLists(a, b->next); return b; }
+}
+
+// Find middle (slow-fast)
+Node* findMiddle(Node* head) {
+    if (!head) return NULL;
+    Node *slow = head, *fast = head;
+    while(fast && fast->next) { slow = slow->next; fast = fast->next->next; }
+    return slow;
+}
+
+// Merge sort for linked list
+Node* sortedMerge(Node* a, Node* b) {
+    return mergeSortedLists(a,b);
+}
+void frontBackSplit(Node* source, Node** frontRef, Node** backRef) {
+    Node* slow = source; Node* fast = source->next;
+    while (fast) {
+        fast = fast->next;
+        if (fast) { slow = slow->next; fast = fast->next; }
+    }
+    *frontRef = source;
+    *backRef = slow->next;
+    slow->next = NULL;
+}
+void mergeSort(Node** headRef) {
+    Node* head = *headRef;
+    if (!head || !head->next) return;
+    Node *a, *b;
+    frontBackSplit(head, &a, &b);
+    mergeSort(&a); mergeSort(&b);
+    *headRef = sortedMerge(a,b);
+}
+
+// Detect loop (Floyd)
+int detectLoop(Node* head) {
+    Node *slow = head, *fast = head;
+    while (slow && fast && fast->next) {
+        slow = slow->next; fast = fast->next->next;
+        if (slow == fast) return 1;
+    }
+    return 0;
+}
+
+// Sum of nodes
+int sumList(Node* head) {
+    int s=0;
+    while(head) { s += head->data; head = head->next; }
+    return s;
+}
+
+// Print odd nodes then even nodes (by value parity)
+void printOddEven(Node* head) {
+    Node *p = head;
+    printf("Odd elements: ");
+    while(p) { if (p->data % 2 != 0) printf("%d ", p->data); p = p->next; }
+    p = head;
+    printf("\nEven elements: ");
+    while(p) { if (p->data % 2 == 0) printf("%d ", p->data); p = p->next; }
+    printf("\n");
+}
+
+// Print list
+void printList(Node* head) {
+    while(head) { printf("%d -> ", head->data); head = head->next; }
+    printf("NULL\n");
+}
+
+// Free list
+void freeList(Node* head) {
+    Node *t;
+    while(head) { t=head; head=head->next; free(t); }
+}
+
+int main() {
+    int a1[] = {3,1,4,7,6};
+    Node* head = createFromArray(a1, 5);
+    printf("Original list: "); printList(head);
+
+    head = insertAtPos(head, 2, 99);
+    printf("After insert 99 at pos2: "); printList(head);
+
+    head = deleteByValue(head, 4);
+    printf("After delete value 4: "); printList(head);
+
+    Node* mid = findMiddle(head);
+    if (mid) printf("Middle node value: %d\n", mid->data);
+
+    printf("Sum of list: %d\n", sumList(head));
+
+    printf("Odd/Even listing:\n");
+    printOddEven(head);
+
+    printf("Reversing list...\n");
+    head = reverseList(head);
+    printList(head);
+
+    // Sort list
+    mergeSort(&head);
+    printf("Sorted list: "); printList(head);
+
+    // Create second sorted list and merge
+    int a2[] = {2,5,8};
+    Node* head2 = createFromArray(a2,3);
+    printf("Second sorted list: "); printList(head2);
+    Node* merged = mergeSortedLists(head, head2);
+    printf("Merged sorted list: "); printList(merged);
+
+    // Detect loop: create small loop for demo
+    if (merged && merged->next && merged->next->next) {
+        merged->next->next->next = merged; // create loop (for demo purposes)
+    }
+    printf("Loop detected? %s\n", detectLoop(merged) ? "Yes" : "No");
+
+    // NOTE: We created a loop intentionally; freeing in presence of loop would hang.
+    // In real usage, don't create loops or remove them before freeing.
+
+    return 0;
+}
