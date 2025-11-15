@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#define MAXTOK 1000
+
+double evalPostfix(const char *expr) {
+    double stack[MAXTOK];
+    int top = -1;
+    char *copy = strdup(expr);
+    char *token = strtok(copy, " ");
+    while (token) {
+        if (strchr("+-*/^", token[0]) && token[1] == '\0') {
+            if (top < 1) { free(copy); fprintf(stderr,"Invalid expression\n"); exit(EXIT_FAILURE); }
+            double b = stack[top--];
+            double a = stack[top--];
+            double res = 0;
+            switch(token[0]) {
+                case '+': res = a + b; break;
+                case '-': res = a - b; break;
+                case '*': res = a * b; break;
+                case '/': res = a / b; break;
+                case '^': res = pow(a,b); break;
+            }
+            stack[++top] = res;
+        } else {
+            stack[++top] = strtod(token, NULL); // supports multi-digit and decimals
+        }
+        token = strtok(NULL, " ");
+    }
+    double result = (top == 0) ? stack[top] : 0;
+    free(copy);
+    return result;
+}
+
+int main() {
+    char expr[1024];
+    printf("Enter postfix expression (tokens separated by spaces):\n");
+    if (!fgets(expr, sizeof(expr), stdin)) return 0;
+    // remove newline
+    expr[strcspn(expr, "\n")] = 0;
+    double res = evalPostfix(expr);
+    printf("Result = %.6g\n", res);
+    return 0;
+}
