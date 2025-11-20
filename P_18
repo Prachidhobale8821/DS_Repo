@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CHAR_SIZE 26
+
+struct Trie {
+    struct Trie* child[CHAR_SIZE];
+    int isEnd;
+};
+
+struct Trie* createNode() {
+    struct Trie* node = (struct Trie*)malloc(sizeof(struct Trie));
+    node->isEnd = 0;
+    for (int i = 0; i < CHAR_SIZE; i++)
+        node->child[i] = NULL;
+    return node;
+}
+
+void insert(struct Trie* root, char* word) {
+    struct Trie* curr = root;
+
+    while (*word) {
+        int index = *word - 'a';
+        if (!curr->child[index])
+            curr->child[index] = createNode();
+        curr = curr->child[index];
+        word++;
+    }
+
+    curr->isEnd = 1;
+}
+
+int search(struct Trie* root, char* word) {
+    struct Trie* curr = root;
+
+    while (*word) {
+        int index = *word - 'a';
+        if (!curr->child[index])
+            return 0;
+        curr = curr->child[index];
+        word++;
+    }
+
+    return curr->isEnd;
+}
+
+int main() {
+    struct Trie* root = createNode();
+
+    insert(root, "hello");
+    insert(root, "world");
+
+    printf("Search 'hello': %s\n", search(root, "hello") ? "Found" : "Not Found");
+    printf("Search 'cat': %s\n", search(root, "cat") ? "Found" : "Not Found");
+
+    return 0;
+}
