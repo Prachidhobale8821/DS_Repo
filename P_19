@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 20
+
+int graph[MAX][MAX], visited[MAX], disc[MAX], low[MAX], parent[MAX];
+int timeD = 0;
+
+void DFS_AP(int u, int n) {
+    visited[u] = 1;
+    disc[u] = low[u] = ++timeD;
+    int children = 0;
+
+    for (int v = 0; v < n; v++) {
+        if (graph[u][v]) {
+            if (!visited[v]) {
+                children++;
+                parent[v] = u;
+
+                DFS_AP(v, n);
+
+                low[u] = (low[u] < low[v]) ? low[u] : low[v];
+
+                if (parent[u] == -1 && children > 1)
+                    printf("Articulation point: %d\n", u);
+
+                if (parent[u] != -1 && low[v] >= disc[u])
+                    printf("Articulation point: %d\n", u);
+            }
+            else if (v != parent[u]) {
+                low[u] = (low[u] < disc[v]) ? low[u] : disc[v];
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    printf("Enter adjacency matrix:\n");
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            scanf("%d", &graph[i][j]);
+
+    for (int i = 0; i < n; i++) {
+        visited[i] = 0;
+        parent[i] = -1;
+    }
+
+    for (int i = 0; i < n; i++)
+        if (!visited[i])
+            DFS_AP(i, n);
+
+    return 0;
+}
